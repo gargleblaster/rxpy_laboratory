@@ -14,13 +14,13 @@ class Trade:
         self.entryPrice = -1
         self.targetPrice = -1
         self.stopPrice = -1
-        self.quotesource = create(market)
-        self.quotesource.pipe(
+        self.quotesource = create(market).pipe(
             op.filter(lambda v: v['symbol'] == self.ticker),
+            op.do_action(print),
+            op.filter(lambda q: self.position == 0 and q['ask'] >= self.entryPrice),
             op.subscribe_on(pool_scheduler)
-        ).subscribe(
-            on_next = self.on_next
         )
+        self.subscription = None
 
     def setupTrade(self, qty, entry, target, stop):
         self.quantity = qty
@@ -28,24 +28,18 @@ class Trade:
         self.targetPrice = target
         self.stopPrice = stop
 
-    def on_next(self, val):
-        print(f'on_next {val}')
-        self.quotesource.pipe(
-            op.subscribe_on(pool_scheduler),
-            self.entryPriceHit()
-        ).subscribe(on_next = lambda v: print('.'))
+        self.subscription = self.quotesource.subscribe(
+            lambda x: self.openPosition(),
+            scheduler=pool_scheduler
+        )
 
-    def on_completed(self):
-        print(f'on_completed')
-
-    def on_error(self, error):
-        print(f'on_error {error}')
 
     def openPosition(self):
         print(f'bought {self.quantity} {self.ticker}')
         self.position = self.quantity
 
-    def entryPriceHit(self):
-        return rx.pipe(
-            op.filter(lambda q: self.position == 0 and q['ask'] >= self.entryPrice)
-        ).subscribe(self.openPosition)
+
+    def dispose(self):
+        if self.subscription:
+            self.subscription.dispose()
+            self.subscription = None
