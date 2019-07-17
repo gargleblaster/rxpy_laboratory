@@ -1,6 +1,6 @@
 import rx
-from rx import of, create, operators as op
-from rx.scheduler import ThreadPoolScheduler
+from rx import of, from_, create, start, operators as op
+from rx.concurrency import ThreadPoolScheduler
 import multiprocessing
 import logging
 
@@ -17,7 +17,10 @@ class Trade:
         self.entryPrice = -1
         self.targetPrice = -1
         self.stopPrice = -1
-        self.market = create(market)
+        self.market = create(lambda o,s: market(o,s)).pipe(
+            op.subscribe_on(pool_scheduler),
+            op.publish()
+        )
         self.monitor = self.market.pipe(
             op.filter(lambda v: v['symbol'] == self.ticker),
             #op.do_action(print),
@@ -69,6 +72,8 @@ class Trade:
             lambda x: self.closePosition(),
             scheduler=pool_scheduler
         )
+
+        self.market.connect()
 
 
     def openPosition(self):
