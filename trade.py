@@ -1,5 +1,5 @@
 import rx
-from rx import of, from_, create, start, operators as op
+from rx import of, from_, create, operators as op
 from rx.concurrency import ThreadPoolScheduler
 import multiprocessing
 import logging
@@ -18,28 +18,26 @@ class Trade:
         self.targetPrice = -1
         self.stopPrice = -1
         self.market = create(lambda o,s: market(o,s)).pipe(
+            op.filter(lambda v: v['symbol'] == self.ticker),
+            #op.take_last(1),
             op.subscribe_on(pool_scheduler),
             op.publish()
         )
         self.monitor = self.market.pipe(
-            op.filter(lambda v: v['symbol'] == self.ticker),
             #op.do_action(print),
             op.subscribe_on(pool_scheduler)
         )
         self.entryTrigger = self.market.pipe(
-            op.filter(lambda v: v['symbol'] == self.ticker),
             op.filter(lambda q: self.position == 0 and q['ask'] >= self.entryPrice),
             op.do_action(lambda x: logging.info(f'entryTrigger {x}')),
             op.subscribe_on(pool_scheduler)
         )
         self.targetTrigger = self.market.pipe(
-            op.filter(lambda v: v['symbol'] == self.ticker),
             op.filter(lambda q: self.position > 0 and q['bid'] >= self.targetPrice),
             op.do_action(lambda x: logging.info(f'targetTrigger {x}')),
             op.subscribe_on(pool_scheduler)
         )
         self.stopTrigger = self.market.pipe(
-            op.filter(lambda v: v['symbol'] == self.ticker),
             op.filter(lambda q: self.position > 0 and q['bid'] <= self.stopPrice),
             op.do_action(lambda x: logging.info(f'stopTrigger {x}')),
             op.subscribe_on(pool_scheduler)
@@ -79,6 +77,7 @@ class Trade:
     def openPosition(self):
         logging.info(f'bought {self.quantity} {self.ticker}')
         self.position = self.quantity
+        self.entryTrigger.dispose()
 
     def closePosition(self):
         logging.info(f'sold {self.quantity} {self.ticker}')
