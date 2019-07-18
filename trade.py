@@ -19,28 +19,32 @@ class Trade:
         self.stopPrice = -1
         self.market = create(lambda o,s: market(o,s)).pipe(
             op.filter(lambda v: v['symbol'] == self.ticker),
-            #op.take_last(1),
             op.subscribe_on(pool_scheduler),
+            op.observe_on(pool_scheduler),
             op.publish()
         )
         self.monitor = self.market.pipe(
             #op.do_action(print),
-            op.subscribe_on(pool_scheduler)
+            op.subscribe_on(pool_scheduler),
+            op.observe_on(pool_scheduler)
         )
         self.entryTrigger = self.market.pipe(
             op.filter(lambda q: self.position == 0 and q['ask'] >= self.entryPrice),
             op.do_action(lambda x: logging.info(f'entryTrigger {x}')),
-            op.subscribe_on(pool_scheduler)
+            op.subscribe_on(pool_scheduler),
+            op.observe_on(pool_scheduler)
         )
         self.targetTrigger = self.market.pipe(
             op.filter(lambda q: self.position > 0 and q['bid'] >= self.targetPrice),
             op.do_action(lambda x: logging.info(f'targetTrigger {x}')),
-            op.subscribe_on(pool_scheduler)
+            op.subscribe_on(pool_scheduler),
+            op.observe_on(pool_scheduler)
         )
         self.stopTrigger = self.market.pipe(
             op.filter(lambda q: self.position > 0 and q['bid'] <= self.stopPrice),
             op.do_action(lambda x: logging.info(f'stopTrigger {x}')),
-            op.subscribe_on(pool_scheduler)
+            op.subscribe_on(pool_scheduler),
+            op.observe_on(pool_scheduler)
         )
         self.subscriptions = {}
 

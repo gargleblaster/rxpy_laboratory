@@ -1,0 +1,19 @@
+When run with Python 3.6, this program runs as expected without any special handling.
+
+However, when run with Python 3.7, it terminates after all three stocks have
+been bought, and all three entryTrigger subscriptions have been unsubscribed.
+
+In order to get it to continue running in Python 3.7, it was necessary to add
+the input() call in __main__.  However, that was not enough, because, even
+though it would continue to process quotes, it would never sell the stock that
+had been bought, because the targetTrigger and stopTrigger subscriptions
+apparently had been unsubscribed or terminated, as well.
+
+Actually, as I wrote that, another test was running, and it did sell the stock,
+so I'm wondering if there is an issue related to which thread in the pool
+actually handles each quote.
+
+I thought that the solution was to add observe_on() to the pipes, but now I'm
+not so sure that it was necessary.
+
+I'm still trying to figure this stuff out!
