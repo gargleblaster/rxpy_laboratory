@@ -77,7 +77,9 @@ class Trade:
     def openPosition(self):
         logging.info(f'bought {self.quantity} {self.ticker}')
         self.position = self.quantity
-        self.entryTrigger.dispose()
+        self.subscriptions['entryTrigger'].dispose()
+        del self.subscriptions['entryTrigger']
+
 
     def closePosition(self):
         logging.info(f'sold {self.quantity} {self.ticker}')
