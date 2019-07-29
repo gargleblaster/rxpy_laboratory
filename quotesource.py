@@ -1,6 +1,11 @@
 from rx import of, operators as op
 from time import sleep
 import random
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 stocks = [
     {'symbol': 'AAPL',  'bid':  199.0, 'ask':  199.25},
@@ -10,7 +15,8 @@ stocks = [
     {'symbol': 'NFLX',  'bid':  375.0, 'ask':  375.25},
 ]
 
-def market(observer, scheduler):
+def beginStreamingQuotes(tickers, observer, scheduler):
+    logger.debug('beginStreamingQuotes')
     while True:
         sleep(random.uniform(0.01, 0.10))
         stock = stocks[random.randrange(0, len(stocks))]
