@@ -2,9 +2,11 @@ from rx import of, operators as op
 from time import sleep
 import random
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
 stocks = [

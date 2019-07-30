@@ -5,9 +5,15 @@ from rx.concurrency import ThreadPoolScheduler
 from quotesource import beginStreamingQuotes
 import multiprocessing
 import logging
+import sys
+
+from stock import Stock
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(stream=sys.stdout))
+
 
 class QuoteObserver():
     def __init__(self):
@@ -27,5 +33,6 @@ class QuoteObserver():
         )
 
     def handleQuote(self, q):
-        logger.debug(f'QuoteObserver.handleQuote({q})')
+        logger.debug(f'QuoteObserver.handleQuote(): creating Stock for {q.key}')
+        config.stocks[q.key] = Stock(q, q.key)
 
